@@ -65,20 +65,30 @@ app.get("/api/persons", (req, res) => {
 });
 
 app.get("/api/persons/:id", (req, res) => {
-  Person.findById(req.params.id).then((person) => {
-    res.json(person);
-  });
+  Person.findById(req.params.id)
+    .then((person) => {
+      if (person) {
+        res.json(person);
+      } else {
+        res.status(404).end();
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(400).send({ error: "malformatted id" });
+    });
 });
 
 app.delete("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const person = persons.find((person) => person.id === id);
-
-  if (!person) {
-    return res.status(404).end();
-  }
-  persons = persons.filter((person) => person.id !== id);
-  res.status(204).end();
+  const id = String(req.params.id);
+  Person.findByIdAndRemove(id)
+    .then(() => {
+      res.status(204).end();
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(400).send({ error: "error" });
+    });
 });
 
 app.post("/api/persons", (req, res) => {
