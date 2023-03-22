@@ -72,6 +72,16 @@ app.get("/api/persons/:id", (req, res, next) => {
     .catch((error) => next(error));
 });
 
+app.get("/info", (req, res) => {
+  Person.countDocuments().then((count) => {
+    res.send(
+      `<div>
+        <p>Phonebook has info for ${count} people</p>
+      </div>`
+    );
+  });
+});
+
 app.delete("/api/persons/:id", (req, res, next) => {
   const id = String(req.params.id);
   Person.findByIdAndRemove(id)
