@@ -30,29 +30,6 @@ app.use(
 );
 app.use(requestLogger);
 
-let persons = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-53223532",
-  },
-  {
-    id: 4,
-    name: "Mary Poppendick",
-    number: "39-23-4785738",
-  },
-];
-
 app.get("/api/persons", (req, res) => {
   Person.find({}).then((persons) => {
     console.log(persons);
@@ -93,6 +70,7 @@ app.delete("/api/persons/:id", (req, res, next) => {
 
 app.post("/api/persons", (req, res, next) => {
   const body = req.body;
+
   const person = new Person({
     name: body.name,
     number: body.number,
@@ -107,13 +85,13 @@ app.post("/api/persons", (req, res, next) => {
 });
 
 app.put("/api/persons/:id", (req, res, next) => {
-  const body = req.body;
-  const person = {
-    name: body.name,
-    number: body.number,
-  };
+  const { name, number } = req.body;
 
-  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+  Person.findByIdAndUpdate(
+    req.params.id,
+    { name, number },
+    { new: true, runValidators: true, context: "query" }
+  )
     .then((updatedPerson) => res.json(updatedPerson))
     .catch((error) => next(error));
 });
@@ -129,10 +107,8 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === "CastError") {
     return response.status(400).send({ error: "malformatted id" });
-  } else if (error.name === "No Content") {
-    return response.status(400).send({ error: "content missing" });
-  } else {
-    return response.status(400).send({ error: "error" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
   }
 
   next(error);
